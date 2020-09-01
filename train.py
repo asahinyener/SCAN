@@ -34,7 +34,8 @@ class VAEdata(data.Dataset):
         def __getitem__(self,index):
             ground_truth=self.hsv_images[index]        
             return ground_truth
-
+def split_train_test(data,train_size):
+    return data[:train_size],data[train_size:]
 def train_dae(DAEnet,optim_dae,train_data_generator,test_data_generator,criterion,check_point_dir,epoch_num,writer,output_file_path):
         for epoch in range(epoch_num):
             running_loss=0.0

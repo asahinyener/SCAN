@@ -15,7 +15,7 @@ def load_model(LOAD_PATH,model,optimizer):
         state=torch.load(LOAD_PATH)
         model.load_state_dict(state["state_dict"])
         optimizer.load_state_dict(state["optimizer"])
-        return model,optimizer
+        #return model,optimizer
 
 def tensor_to_im(tensor):
         cv2_formatted=np.transpose(tensor,(1,2,0))
@@ -61,7 +61,7 @@ def latent_traversal(BVAE,DAE_net,data,channel_mean,channel_std,SAVE_PATH):
         images=[]
         pertubs=np.linspace(-3.0,3.0,20)
         batch=data.type(torch.cuda.FloatTensor).cuda()
-        reconstruction,mean,std=BVAE1(batch)
+        reconstruction,mean,std=BVAE(batch)
         newz=reparametrize(mean,std)
         #newz[0][0]+=pertubs[0]
         #try1=torch.rand(100,32)
@@ -71,11 +71,12 @@ def latent_traversal(BVAE,DAE_net,data,channel_mean,channel_std,SAVE_PATH):
             for j in range(20):
                 y = torch.empty_like(newz).copy_(newz)
                 y[0][i]+=pertubs[j]
-                recon=BVAE1.decoder(y)
+                reconstruct=BVAE.decoder(y)
+                recon=DAE_net(reconstruct)
                 new=recon.cpu().data.numpy()
                 for channel in range(3):
-                    new[0][channel]*=std_running_count[channel]
-                    new[0][channel]+=mean_running_count[channel]
+                    new[0][channel]*=channel_std[channel]
+                    new[0][channel]+=channel_mean[channel]
                 changed=np.transpose(new[0],(1,2,0))
                 a=changed.astype(np.uint8)
                 images.append(a)
@@ -90,6 +91,7 @@ def latent_traversal(BVAE,DAE_net,data,channel_mean,channel_std,SAVE_PATH):
                 imagename=str(j)+".jpg"
                 save_path=os.path.join(index,imagename)
                 cv2.imwrite(save_path,tosave)
+            make_gif(index,index)
 def make_gif(LOAD_PATH,SAVE_PATH):
         objects=[]
         for image_1 in os.listdir(LOAD_PATH):

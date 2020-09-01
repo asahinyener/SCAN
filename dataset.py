@@ -24,10 +24,11 @@ def save_data(SAVE_PATH,array):
         with open(SAVE_PATH,"wb") as f:
             np.save(f,array)
 
-def normalize_data(SAVE_PATH,data):
+def normalize_data(SAVE_PATH,LOAD_PATH):
         means=[]
         stds=[]
         array_length=data.shape[0]
+        data=load_data(LOAD_PATH)
         array=np.array(data,dtype=np.float64)
         for index in range(0,array_length):
             im=array[index]
@@ -53,3 +54,4 @@ def normalize_data(SAVE_PATH,data):
                 element[channel]-=mean_running_count[channel]
                 element[channel]/=std_running_count[channel]
         save_data(SAVE_PATH,array)
+        return mean_running_count,std_running_count
