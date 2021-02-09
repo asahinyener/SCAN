@@ -8,43 +8,19 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.utils.data as data
 import torch.optim as optim
-from model.py import DAE,BVAE
+from model import DAE,BVAE
+import utils
 
-
-class DAEdata(data.Dataset):
-        def __init__(self,hsv_images):
-            self.hsv_images=hsv_images
-            self.image_size=hsv_images[0].shape
-        def __len__(self):
-            return len(self.hsv_images)
-        def __getitem__(self,index):
-            ground_truth=self.hsv_images[index]        
-            h0,h1=sorted(random.sample(range(0,80),2))
-            w0,w1=sorted(random.sample(range(0,80),2))
-            blocked_image=np.copy(ground_truth)
-            blocked_image[:,h0:h1,w0:w1]=0.0
-            return ground_truth,blocked_image
-
-class VAEdata(data.Dataset):
-        def __init__(self,hsv_images):
-            self.hsv_images=hsv_images
-            self.image_size=hsv_images[0].shape
-        def __len__(self):
-            return len(self.hsv_images)
-        def __getitem__(self,index):
-            ground_truth=self.hsv_images[index]        
-            return ground_truth
-def split_train_test(data,train_size):
-    return data[:train_size],data[train_size:]
 def train_dae(DAEnet,optim_dae,train_data_generator,test_data_generator,criterion,check_point_dir,epoch_num,writer,output_file_path):
         for epoch in range(epoch_num):
             running_loss=0.0
-            for i,batch in enumerate(data_generator,0):
+            for i,batch in enumerate(train_data_generator,0):
                 a,b=batch
                 a=a.type(torch.cuda.FloatTensor).cuda()
                 b=b.type(torch.cuda.FloatTensor).cuda()
                 decoded=DAEnet(b)
                 loss=criterion(decoded,a)
+                #loss=-(a * torch.log(decoded) + (1 - a) * torch.log(1 - decoded)).sum() / 32
                 writer.add_scalar("Loss/dae_train", loss, epoch)
                 optim_dae.zero_grad()
                 loss.backward()
@@ -55,7 +31,7 @@ def train_dae(DAEnet,optim_dae,train_data_generator,test_data_generator,criterio
                           (epoch + 1, i + 1, running_loss /20))
                         ofile.close()
                     running_loss = 0.0
-            if(epoch%50==49):
+            if(epoch%100==99):
                 #print("saving!")
                 state = {
                     'checkpoint_num': epoch,
@@ -76,24 +52,24 @@ def train_dae(DAEnet,optim_dae,train_data_generator,test_data_generator,criterio
 
 def train_bvae(BVAE,optim,train_data_generator,test_data_generator,check_point_dir,epoch_num,writer,output_file_path):
         for epoch in range(epoch_num):
-            running_loss=0.0
+            #running_loss=0.0
             for i,batch in enumerate(train_data_generator,0):
                 batch=batch.type(torch.cuda.FloatTensor).cuda()
                 reconstruction,mean,std=BVAE(batch)
                 loss=BVAE.compute_loss(batch,reconstruction,mean,std)
                 writer.add_scalar("Loss/train", loss, epoch)
-                running_loss+=loss.item()
+                #running_loss+=loss.item()
                 optim.zero_grad()
                 loss.backward()
                 optim.step()
-                if(i%20==19):
+                """if(i%20==19):
                     with open(output_file_path,"a") as ofile:
                         ofile.write('[%d, %5d] loss: %.3f \n' %
                           (epoch + 1, i + 1, running_loss /20))
                         ofile.close()
-                    running_loss = 0.0
-            if(epoch%50==49):
-                print("saving!")
+                    running_loss = 0.0"""
+            if(epoch%100==99):
+                #print("saving!")
                 state = {
                     'checkpoint_num': epoch,
                     'state_dict': BVAE.state_dict(),
@@ -108,3 +84,59 @@ def train_bvae(BVAE,optim,train_data_generator,test_data_generator,check_point_d
                     loss=BVAE.compute_loss(batch,reconstruction,mean,std)
                     writer.add_scalar("Loss/test", loss, epoch)
         writer.flush()
+def train_scan(SCAN_net,optim_scan,train_data_generator,test_data_generator,check_point_dir,epoch_num,writer,output_file_path):
+    losses=[]
+    for epoch in range(epoch_num):
+        for batchid,batch in enumerate(train_data_generator,0):
+            one_hot,image=batch
+            one_hot=one_hot.type(torch.cuda.FloatTensor).cuda()
+            image=image.type(torch.cuda.FloatTensor).cuda()
+            recon,m,s=SCAN_net(one_hot)
+            loss,kld=SCAN_net.compute_loss(image,one_hot,recon,m,s)
+            losses.append(kld)
+            writer.add_scalar("Loss/train/scan",loss,epoch)
+            optim_scan.zero_grad()
+            loss.backward()
+            #optim_scan_zero_grad()
+            optim_scan.step()
+        if(epoch%50==49):
+                    #print("saving!")
+                    state = {
+                        'checkpoint_num': epoch,
+                        'state_dict': SCAN_net.state_dict(),
+                        'optimizer': optim_scan.state_dict(),                
+                    }
+                    path_now=str(epoch+1)+".pt"
+                    saves=os.path.join(check_point_dir,path_now)
+                    torch.save(state,saves)
+                    for i,batch in enumerate(test_data_generator,0):
+                        one_hot,image=batch
+                        one_hot=one_hot.type(torch.cuda.FloatTensor).cuda()
+                        image=image.type(torch.cuda.FloatTensor).cuda()
+                        recon,m,s=SCAN_net(one_hot)
+                        loss,kld=SCAN_net.compute_loss(image,one_hot,recon,m,s)
+                        writer.add_scalar("Loss/test/scan", loss, epoch)
+    writer.flush()
+    return losses
+def train_recomb(SCAN_Recomb,optim_recomb,train_data_generator,check_point_dir):
+    for batch_id,batch in enumerate(train_data_generator,0):
+        op_type,y0,y1,y_ground_truth,images=batch
+        #print(op_type)
+        #print(one_hot_to_label(y0[0]))
+        #print(one_hot_to_label(y1[0]))
+        #print(one_hot_to_label(y_ground_truth[0]))
+
+        #img.append(images)
+        
+        op_type=op_type.type(torch.cuda.FloatTensor)
+        y0=y0.type(torch.cuda.FloatTensor).cuda()
+        y1=y1.type(torch.cuda.FloatTensor).cuda()
+        y_ground_truth=y_ground_truth.type(torch.cuda.FloatTensor).cuda()
+        images=images.type(torch.FloatTensor).cuda()
+        out0,out1=SCAN_Recomb(y0,y1,op_type.unsqueeze(2))
+        loss=recomb.compute_loss(images,out0,out1,y_ground_truth)
+        optim_recomb.zero_grad()
+        #losses.append(loss.item())
+        loss.backward()
+        optim_recomb.step()
+    utils.save_model(SCAN_Recomb,optim_recomb,check_point_dir,"SCAN_Recomb.pt")
