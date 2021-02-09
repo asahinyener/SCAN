@@ -30,16 +30,16 @@ dataset.read_data(config.DATA_PATH,config.UNNORM_DATA_PATH)
 #Turn data into hsv and normalize to mean=0 std=1
 channel_mean,channel_std=dataset.normalize_data(NORM_DATA_PATH,UNNORM_DATA_PATH)
 #load into array
-data=dataset.load_data(NORM_DATA_PATH)
+data_set=dataset.load_data(NORM_DATA_PATH)
 #create one hot array 
-onehots=dataloader.generate_one_hots(data.shape[0])
+onehots=dataloader.generate_one_hots(data_set.shape[0])
 #create shuffle indexes
-perm=dataset.index_generate_random(data)
+perm=dataset.index_generate_random(data_set)
 #shuffle the data
-data=data[perm]
+data_set=data_set[perm]
 one_hots=one_hots[perm]
 
-train_data,test_data=dataset.split_train_test(data,config.TRAIN_SIZE)
+train_data,test_data=dataset.split_train_test(data_set,config.TRAIN_SIZE)
 oh_train_data,oh_test_data=dataset.split_train_test(one_hots,config.TRAIN_SIZE)
 
 writer = SummaryWriter()
@@ -102,7 +102,7 @@ oh_test_generator=data.DataLoader(oh_test_set,**config.scan_generator_params)
 
 train.train_scan(SCAN_net,optim_scan,oh_training_generator,oh_test_generator,config.SCAN_CHECKPOINT,10,writer,"output_file_path")
 
-recomb_train_set=dataloader.RECOMBdata(data,perm,[15,15,15,2],20000)
+recomb_train_set=dataloader.RECOMBdata(data_set,perm,[15,15,15,2],20000)
 
 recomb_training_generator=data.DataLoader(recomb_train_set,**config.recomb_generator_params)
 
