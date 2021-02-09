@@ -23,7 +23,17 @@ def load_data(LOAD_PATH):
 def save_data(SAVE_PATH,array):
         with open(SAVE_PATH,"wb") as f:
             np.save(f,array)
-
+def normalize_data_sigmoid(SAVE_PATH,LOAD_PATH):
+        data=load_data(LOAD_PATH)
+        #array_length=data.shape[0]
+        array=np.array(data,dtype=np.float64)
+        scale = np.array([1.0/180.0, 1.0/255.0, 1.0/255.0],
+                       dtype=np.float32) # Scale to fit 0.0 ~ 1.0
+        for element in array:
+                element[0]*=scale[0]
+                element[1]*=scale[1]
+                element[2]*=scale[2]
+        save_data(SAVE_PATH,array)
 def normalize_data(SAVE_PATH,LOAD_PATH):
         means=[]
         stds=[]
@@ -55,3 +65,9 @@ def normalize_data(SAVE_PATH,LOAD_PATH):
                 element[channel]/=std_running_count[channel]
         save_data(SAVE_PATH,array)
         return mean_running_count,std_running_count
+def index_generate_random(data_set):
+    shuffle_length=data_set.shape[0]
+    indexes=np.random.permutation(shuffle_length)
+    return indexes
+def split_train_test(data,train_size):
+    return data[:train_size],data[train_size:]
