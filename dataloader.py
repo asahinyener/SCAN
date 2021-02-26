@@ -181,4 +181,12 @@ def index_to_one_hot(index):
     obj_id = index % 3
     return one_hot_generate([obj_color,wall_color,floor_color,obj_id])
 
-            
+def one_hot_generate(labels):
+    one_hot=np.zeros(51)
+    #print(labels)
+    for i in range(len(labels)):
+        if (labels[i] != -1.0):
+            one_hot[16*i+int(labels[i])]=1
+        else:
+            pass
+    return one_hot  
