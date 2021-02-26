@@ -32,7 +32,7 @@ channel_mean,channel_std=dataset.normalize_data(NORM_DATA_PATH,UNNORM_DATA_PATH)
 #load into array
 data_set=dataset.load_data(NORM_DATA_PATH)
 #create one hot array 
-onehots=dataloader.generate_one_hots(data_set.shape[0])
+one_hots=dataloader.generate_one_hots(data_set.shape[0])
 #create shuffle indexes
 perm=dataset.index_generate_random(data_set)
 #shuffle the data
