@@ -170,4 +170,15 @@ def generate_one_hots(dataset_size):
         one_hots.append(index_to_one_hot(index))
     one_hots=np.array(one_hots)
     return one_hots
+def index_to_one_hot(index):
+    obj_color = index % 16
+    index = index // 16
+    wall_color = index % 16    
+    index = index // 16
+    floor_color = index % 16
+
+    index = index // 16
+    obj_id = index % 3
+    return one_hot_generate([obj_color,wall_color,floor_color,obj_id])
+
             
