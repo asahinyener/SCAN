@@ -1,5 +1,6 @@
 import random
 import numpy as np
+import torch.utils.data as data
 class RECOMBdata(data.Dataset):
     def __init__(self,images,perm,var_sizes,step_size):
         self.images=images
