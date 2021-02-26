@@ -120,3 +120,12 @@ def save_model(model,optimizer,save_path,file_name):
         }
         final_path=os.path.join(save_path+file_name)
         torch.save(state,save_path)
+def one_hot_generate(labels):
+    one_hot=np.zeros(51)
+    #print(labels)
+    for i in range(len(labels)):
+        if (labels[i] != -1.0):
+            one_hot[16*i+int(labels[i])]=1
+        else:
+            pass
+    return one_hot
