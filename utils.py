@@ -12,10 +12,10 @@ from model import reparametrize
 import imageio
 
 
-def load_model(LOAD_PATH,model,optimizer):
+def load_model(LOAD_PATH,model):
         state=torch.load(LOAD_PATH)
-        model.load_state_dict(state["state_dict"])
-        optimizer.load_state_dict(state["optimizer"])
+        model.load_state_dict(state["state_dict"],strict=False)
+        #optimizer.load_state_dict(state["optimizer"])
         #return model,optimizer
 
 def tensor_to_im(tensor):
