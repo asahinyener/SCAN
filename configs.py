@@ -49,3 +49,37 @@ BVAE_CHECKPOINT="BVAE_LOG"
 BVAE_LOAD_PATH=BVAE_CHECKPOINT+"/"+str(BVAE_TRAIN_EPOCH)+".pt"
 VIS_RECON_PATH="VIS_RECON"
 VIS_LATENT_TRAVERSAL="LATENT_TRAVERSAL"
+object_type_dict = {
+    "undefined": -1,
+    "lollypop": 0,
+    "top hat": 1,
+    "briefcase": 2
+}
+operator_type_dict = {
+    "AND": 0,
+    "INCOMMON": 1,
+    "DIFFERENCE": 2,
+}
+color_dict = {
+    "undefined": -1,
+    "white" : 0,
+    "blue" : 1,
+    "dark_purple": 2,
+    "light_blue" :3,
+    "green":4,
+    "light_purple":5,
+    "lime":6,
+    "grey":7,
+    "brown":8,
+    "dark_pink":9,
+    "red":10,
+    "light_pink":11,
+    "dark_yellow":12,
+    "bright_pink":13,
+    "bright_yellow":14,
+    "open_yellow":15
+
+}
+colours=[(x,color_dict[x]) for x in color_dict]
+object_types=[(x,object_type_dict[x]) for x in object_type_dict]
+ops=[(x,operator_type_dict[x]) for x in operator_type_dict]
