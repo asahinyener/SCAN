@@ -51,14 +51,14 @@ VIS_RECON_PATH="VIS_RECON"
 VIS_LATENT_TRAVERSAL="LATENT_TRAVERSAL"
 object_type_dict = {
     "undefined": -1,
-    "lollypop": 0,
+    "ice lolly": 0,
     "top hat": 1,
     "briefcase": 2
 }
 operator_type_dict = {
     "AND": 0,
     "INCOMMON": 1,
-    "DIFFERENCE": 2,
+    "IGNORE": 2,
 }
 color_dict = {
     "undefined": -1,
@@ -68,7 +68,7 @@ color_dict = {
     "light_blue" :3,
     "green":4,
     "light_purple":5,
-    "lime":6,
+    "cyan":6,
     "grey":7,
     "brown":8,
     "dark_pink":9,
